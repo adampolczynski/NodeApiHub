@@ -1,19 +1,35 @@
 const http = require('http');
+const net = require('net');
+const config = require('dotenv').config();
 
-// options for example api server, later take it from config files
-const options = {
-    host: 'localhost',
-    port: 4000,
-    path: '/api',
-}
+const hosts = config.parsed.API_HOSTS.split(',');
+const ports = config.parsed.API_PORTS.split(',');
+const prefixes = config.parsed.API_PREFIXES.split(',');
+
+const serversList = hosts.map((host, i) => {
+    return { host, port: ports[i], path: prefixes[i] };
+})
 
 // create apiHub server
 const apiHub = http.createServer((req, res) => {
-
-    // pipe request to our api server
-    req.pipe(http.request(options), {end: true})
-    res.writeHead(200, { 'Content-Type': 'text/plain' });    
+    
+    // respond it is just ok
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('okay');
+
+});
+
+apiHub.on('request', (req, res) => {
+     
+    // pipe request to each server from config
+    serversList.forEach((server) => {
+        req.pipe(http.request(server), { end: true });
+    });
+
+});
+
+apiHub.on('connection', (req, cltSocket, head) => {
+    console.log('api hub new connection event')
 });
 
 // start listening

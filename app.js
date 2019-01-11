@@ -23,13 +23,18 @@ apiHub.on('request', (req, res) => {
      
     // pipe request to each server from config
     serversList.forEach((server) => {
-        req.pipe(http.request(server), { end: true });
+
+        // if url is not matching our prefix do not pipe
+        if (server.path !== req.url.substring(0, server.path.length)) {
+            return;
+        }
+        req.pipe(http.request({ ...server, method: req.method }), { end: true });
     });
 
 });
 
 apiHub.on('connection', (req, cltSocket, head) => {
-    console.log('api hub new connection event')
+    console.log('New apiHub connection');
 });
 
 // start listening

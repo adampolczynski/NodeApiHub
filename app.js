@@ -15,20 +15,21 @@ const apiHub = http.createServer((req, res) => {
     
     // respond it is just ok
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('okay');
+    res.end('Got it, passing throu...');
 
 });
 
 apiHub.on('request', (req, res) => {
      
     // pipe request to each server from config
-    serversList.forEach((server) => {
+    serversList.forEach((serverOpts) => {
 
         // if url is not matching our prefix do not pipe
-        if (server.path !== req.url.substring(0, server.path.length)) {
+        if (serverOpts.path !== req.url.substring(0, serverOpts.path.length)) {
             return;
         }
-        req.pipe(http.request({ ...server, method: req.method }), { end: true });
+        console.log(`Forwarding request to server: ${serverOpts.host}:${serverOpts.port}`)
+        req.pipe(http.request({ ...serverOpts, path: req.url, method: req.method }), { end: true });
     });
 
 });
